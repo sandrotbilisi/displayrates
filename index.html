@@ -62,16 +62,7 @@
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   </head>
 
-  <video
-    src="final.webm"
-    autoplay
-    loop
-    muted
-    playsinline
-    class="fixed top-4 left-0 w-[100vh] h-[100vw] transform rotate-90 object-contain pointer-events-none z-10"
-  ></video>
-
-  <div class="wrapper">
+  <div class="wrapper overflow-hidden">
     <video width="600" height="100%" autoplay loop muted playsinline>
       <!-- <source
         src="https://rotato.netlify.app/alpha-demo/movie-hevc.mov"
@@ -101,6 +92,15 @@
         <div
           class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800/20 via-slate-900/10 to-transparent"
         ></div>
+
+        <video
+          src="final.webm"
+          autoplay
+          loop
+          muted
+          playsinline
+          class="pointer-events-none z-10"
+        ></video>
 
         <h1
           class="text-6xl lg:text-7xl font-bold mb-8 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500 bg-clip-text text-transparent animate-pulse drop-shadow-2xl relative z-10 text-center"
