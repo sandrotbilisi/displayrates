@@ -3,17 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <title>Exmony Rates</title>
-
-    <!-- Tailwind via CDN -->
     <link
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
       rel="stylesheet"
     />
-
-    <!-- Image styling + dark background -->
     <style>
       body {
-        /* Approximate Tailwind gradient */
         background: linear-gradient(
           to bottom right,
           #0f172a,
@@ -31,7 +26,6 @@
         position: relative;
         margin: 0;
       }
-
       .rotate-page {
         transform: rotate(90deg);
         transform-origin: center center;
@@ -42,7 +36,6 @@
         top: 0;
         left: 0;
       }
-
       .wrapper {
         position: absolute;
         top: -100vw;
@@ -53,8 +46,6 @@
         transform-origin: bottom left;
       }
     </style>
-
-    <!-- Socket.IO CDN -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   </head>
 
@@ -70,6 +61,7 @@
       >
         Loading…
       </div>
+
       <img
         src="logo.png"
         class="fixed w-45 h-40 top-20 left-4 animate-pulse drop-shadow-2xl"
@@ -78,18 +70,10 @@
       <div
         class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col items-center justify-start mt-[25rem] p-12 w-full h-full relative"
       >
+        <!-- Light background glow -->
         <div
-          class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800/20 via-slate-900/10 to-transparent"
+          class="absolute top-1/4 left-1/2 w-80 h-80 transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-tr from-indigo-500/10 to-purple-500/10 blur-3xl pointer-events-none"
         ></div>
-
-        <!-- <video
-          src="final.webm"
-          autoplay
-          loop
-          muted
-          playsinline
-          class="pointer-events-none z-10"
-        ></video> -->
 
         <h1
           class="text-7xl lg:text-8xl font-bold mb-14 mt-16 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500 bg-clip-text text-transparent animate-pulse drop-shadow-2xl relative z-10 text-center"
@@ -124,16 +108,17 @@
                   <th
                     class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
                   >
-                    Notable RATE
+                    Notable Rate
                   </th>
                 </tr>
               </thead>
               <tbody
                 id="ratesBody"
-                class="divide-y divide-slate-700/50"
+                class="divide-y divide-slate-700/50 text-2xl lg:text-3xl"
               ></tbody>
             </table>
           </div>
+
           <div
             class="absolute -top-6 -left-8 w-40 h-40 bg-gradient-to-r from-gray-600 to-slate-700 rounded-full blur-xl opacity-20 animate-pulse"
           ></div>
@@ -145,7 +130,7 @@
 
       <script>
         const API_URL = "https://api.exmony.ge/rate-tables?name=kobaladze";
-        const WS_URL = "https://api.exmony.ge"; // base URL for Socket.IO
+        const WS_URL = "https://api.exmony.ge";
         let tableId = null;
 
         function createCell(txt, extraCls) {
@@ -198,29 +183,19 @@
             tr.appendChild(td0);
 
             tr.appendChild(
-              createCell(
-                cur.buyRate,
-                "buy text-green-400 font-bold text-lg lg:text-xl"
-              )
+              createCell(cur.buyRate, "buy text-green-400 font-bold")
             );
             tr.appendChild(
-              createCell(
-                cur.sellRate,
-                "sell text-yellow-400 font-bold text-lg lg:text-xl"
-              )
+              createCell(cur.sellRate, "sell text-yellow-400 font-bold")
             );
             tr.appendChild(
-              createCell(
-                cur.notableRate,
-                "notable text-blue-400 font-bold text-lg lg:text-xl"
-              )
+              createCell(cur.notableRate, "notable text-blue-400 font-bold")
             );
 
             tbody.appendChild(tr);
           });
         }
 
-        // Initial fetch
         fetch(API_URL)
           .then((res) => res.json())
           .then((data) => {
@@ -234,7 +209,6 @@
             console.error("Initial fetch failed:", err);
           });
 
-        // Live updates via socket.io
         function initSocket(tableId) {
           const socket = io(WS_URL, {
             transports: ["websocket"],
@@ -248,9 +222,7 @@
 
           socket.on("table:update", (data) => {
             console.log("📡 Live update:", data);
-            if (data._id === tableId) {
-              render(data);
-            }
+            if (data._id === tableId) render(data);
           });
 
           socket.on("disconnect", () => {
