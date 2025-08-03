@@ -45,12 +45,29 @@
         transform: rotate(90deg);
         transform-origin: bottom left;
       }
+      .micro-tiny {
+        transform: scale(0.01) !important;
+        transition: transform 0.5s ease-in-out !important;
+      }
+      .normal-size {
+        transform: scale(1) !important;
+        transition: transform 0.5s ease-in-out !important;
+      }
     </style>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   </head>
 
-  <div class="wrapper overflow-hidden">
+  <div class="wrapper overflow-hidden" id="mainContent">
     <body>
+      <!-- Fullscreen Button -->
+      <button
+        id="fullscreenBtn"
+        class="fixed top-4 left-4 z-50 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
+        onclick="toggleMicroTiny()"
+      >
+        🔍 Fullscreen
+      </button>
+
       <div
         class="absolute inset-0 bg-black from-slate-800/20 via-slate-900/10 to-transparent"
       />
@@ -284,6 +301,19 @@
           socket.on("disconnect", () => {
             console.warn("⚠️ Socket disconnected");
           });
+        }
+
+        function toggleMicroTiny() {
+          const mainContent = document.getElementById("mainContent");
+          if (mainContent.classList.contains("micro-tiny")) {
+            mainContent.classList.remove("micro-tiny");
+            mainContent.classList.add("normal-size");
+            document.getElementById("fullscreenBtn").textContent = "🔍 Fullscreen";
+          } else {
+            mainContent.classList.remove("normal-size");
+            mainContent.classList.add("micro-tiny");
+            document.getElementById("fullscreenBtn").textContent = "🔍 Normal Size";
+          }
         }
       </script>
 
