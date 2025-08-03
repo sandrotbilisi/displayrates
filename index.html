@@ -81,12 +81,75 @@
       #fullscreen-button[fullscreen] svg:last-child {
         display: block;
       }
+      
+      #play-video-button {
+        position: fixed;
+        top: 20px;
+        left: 80px;
+        z-index: 1000;
+        background: rgba(0, 0, 0, 0.7);
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: white;
+      }
+      
+      #play-video-button:hover {
+        background: rgba(0, 0, 0, 0.9);
+        transform: scale(1.1);
+      }
+      
+      #play-video-button svg {
+        width: 24px;
+        height: 24px;
+        fill: currentColor;
+      }
+      
+      #video-player {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 9999;
+        background: black;
+        display: none;
+      }
+      
+      #video-player video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      #video-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        color: white;
+        font-size: 24px;
+        z-index: 10000;
+      }
     </style>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   </head>
 
   <div class="wrapper overflow-hidden" id="mainContent">
     <body>
+      <!-- Video Player Overlay -->
+      <div id="video-player">
+        <video id="video-element" muted autoplay>
+          <source src="vid_to_play.mp4" type="video/mp4">
+        </video>
+        <button id="video-close" onclick="closeVideo()">✕</button>
+      </div>
 
 
       <div
@@ -342,6 +405,17 @@
           document.body.appendChild(fullscreen_button);
         }
 
+        // Play Video functionality
+        const play_video_button = document.createElement("button");
+        play_video_button.setAttribute('id','play-video-button');
+        play_video_button.addEventListener("click", playVideo);
+        play_video_button.innerHTML = `
+          <svg viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        `;
+        document.body.appendChild(play_video_button);
+
         function toggle_fullscreen() {
           if (!document.fullscreenElement) {
             document.body.requestFullscreen();
@@ -349,6 +423,41 @@
           } else {
             document.exitFullscreen();
             document.body.removeAttribute("fullscreen"); 
+          }
+        }
+
+        function playVideo() {
+          const videoPlayer = document.getElementById('video-player');
+          const videoElement = document.getElementById('video-element');
+          
+          // Show video player
+          videoPlayer.style.display = 'block';
+          
+          // Request fullscreen for the video player
+          videoPlayer.requestFullscreen().then(() => {
+            // Start playing the video
+            videoElement.play();
+          }).catch(err => {
+            console.log('Fullscreen request failed:', err);
+            // Still play the video even if fullscreen fails
+            videoElement.play();
+          });
+        }
+
+        function closeVideo() {
+          const videoPlayer = document.getElementById('video-player');
+          const videoElement = document.getElementById('video-element');
+          
+          // Stop the video
+          videoElement.pause();
+          videoElement.currentTime = 0;
+          
+          // Hide video player
+          videoPlayer.style.display = 'none';
+          
+          // Exit fullscreen if we're in it
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
           }
         }
       </script>
