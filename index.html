@@ -45,13 +45,41 @@
         transform: rotate(90deg);
         transform-origin: bottom left;
       }
-      .micro-tiny {
-        transform: scale(0.01) !important;
-        transition: transform 0.5s ease-in-out !important;
+      #fullscreen-button {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1000;
+        background: rgba(0, 0, 0, 0.7);
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: white;
       }
-      .normal-size {
-        transform: scale(1) !important;
-        transition: transform 0.5s ease-in-out !important;
+      
+      #fullscreen-button:hover {
+        background: rgba(0, 0, 0, 0.9);
+        transform: scale(1.1);
+      }
+      
+      #fullscreen-button svg {
+        width: 24px;
+        height: 24px;
+        fill: currentColor;
+      }
+      
+      #fullscreen-button svg:last-child {
+        display: none;
+      }
+      
+      #fullscreen-button[fullscreen] svg:first-child {
+        display: none;
+      }
+      
+      #fullscreen-button[fullscreen] svg:last-child {
+        display: block;
       }
     </style>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -59,14 +87,7 @@
 
   <div class="wrapper overflow-hidden" id="mainContent">
     <body>
-      <!-- Fullscreen Button -->
-      <button
-        id="fullscreenBtn"
-        class="fixed top-4 left-4 z-50 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
-        onclick="toggleMicroTiny()"
-      >
-        🔍 Fullscreen
-      </button>
+
 
       <div
         class="absolute inset-0 bg-black from-slate-800/20 via-slate-900/10 to-transparent"
@@ -303,16 +324,31 @@
           });
         }
 
-        function toggleMicroTiny() {
-          const mainContent = document.getElementById("mainContent");
-          if (mainContent.classList.contains("micro-tiny")) {
-            mainContent.classList.remove("micro-tiny");
-            mainContent.classList.add("normal-size");
-            document.getElementById("fullscreenBtn").textContent = "🔍 Fullscreen";
+        // Fullscreen functionality
+        if (document.fullscreenEnabled) {
+          const fullscreen_button = document.createElement("button");
+          fullscreen_button.setAttribute('id','fullscreen-button');
+          fullscreen_button.addEventListener("click", toggle_fullscreen);
+          fullscreen_button.innerHTML = `
+            <svg viewBox="0 0 24 24">
+              <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 
+              7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+            </svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 
+              11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+            </svg>
+          `;
+          document.body.appendChild(fullscreen_button);
+        }
+
+        function toggle_fullscreen() {
+          if (!document.fullscreenElement) {
+            document.body.requestFullscreen();
+            document.body.setAttribute("fullscreen",""); 
           } else {
-            mainContent.classList.remove("normal-size");
-            mainContent.classList.add("micro-tiny");
-            document.getElementById("fullscreenBtn").textContent = "🔍 Normal Size";
+            document.exitFullscreen();
+            document.body.removeAttribute("fullscreen"); 
           }
         }
       </script>
