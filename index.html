@@ -140,18 +140,34 @@
         z-index: 10000;
       }
 
-      .error-message {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(220, 38, 38, 0.9);
-        color: white;
-        padding: 2rem;
+      .table-card {
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(100, 116, 139, 0.3);
         border-radius: 1rem;
-        text-align: center;
-        z-index: 10000;
-        max-width: 80%;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .table-card:hover {
+        background: rgba(30, 41, 59, 0.8);
+        border-color: rgba(100, 116, 139, 0.6);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      }
+
+      .loading-spinner {
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
     </style>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -167,142 +183,175 @@
         <button id="video-close" onclick="closeVideo()">✕</button>
       </div>
 
-      <!-- Error Message -->
-      <div id="error-message" class="error-message" style="display: none;">
-        <h2 class="text-2xl font-bold mb-2">Table Not Found</h2>
-        <p>Please check the URL and make sure the table ID is correct.</p>
-        <p class="text-sm mt-2">URL format: ?table=TABLE_ID</p>
-      </div>
+      <!-- Table Selection Page -->
+      <div id="table-selection" class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col items-center justify-center p-6">
+        <div class="text-center mb-12">
+          <h1 class="text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500 bg-clip-text text-transparent animate-pulse">
+            Exmony
+          </h1>
+          <p class="text-xl lg:text-2xl text-slate-300 font-light">
+            Live Currency Exchange Rates
+          </p>
+        </div>
 
-      <div
-        class="absolute inset-0 bg-black from-slate-800/20 via-slate-900/10 to-transparent"
-      />
+        <div id="loading-tables" class="text-center">
+          <div class="loading-spinner mx-auto mb-4"></div>
+          <p class="text-slate-400">Loading available tables...</p>
+        </div>
 
-      <div
-        id="branchLabel"
-        class="fixed top-4 right-4 text-2xl text-white font-bold text-center bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500 bg-clip-text text-transparent animate-pulse drop-shadow-2xl"
-      >
-        Loading…
-      </div>
+        <div id="tables-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full" style="display: none;">
+          <!-- Tables will be populated here -->
+        </div>
 
-      <img
-        src="logo.png"
-        class="fixed w-45 h-40 top-20 left-4 animate-pulse drop-shadow-2xl"
-      />
+        <div id="no-tables" class="text-center" style="display: none;">
+          <p class="text-slate-400 text-lg">No tables available at the moment.</p>
+        </div>
 
-      <div
-        class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col items-center justify-start mt-[25rem] p-12 w-full h-full relative"
-      >
-        <!-- Light background glow -->
-        <div
-          class="absolute top-1/4 left-1/2 w-80 h-80 transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-tr from-indigo-500/10 to-purple-500/10 blur-3xl pointer-events-none"
-        ></div>
-
-        <h1
-          class="text-7xl lg:text-8xl font-bold mb-14 mt-16 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500 bg-clip-text text-transparent animate-pulse drop-shadow-2xl relative z-10 text-center"
-        >
-          Exmony
-        </h1>
-
-        <div class="w-full max-w-7xl relative z-10">
-          <div
-            class="bg-gradient-to-r from-slate-800/50 via-slate-700/50 to-slate-800/50 backdrop-blur-xl border border-slate-500/30 rounded-3xl overflow-hidden shadow-2xl shadow-black/20"
+        <footer class="text-center mt-16 text-slate-400 text-sm">
+          Powered By
+          <span
+            class="text-yellow-400 font-semibold ml-1"
+            style="
+              text-shadow: 0 0 6px rgba(250, 204, 21, 0.9),
+                0 0 12px rgba(250, 204, 21, 0.6);
+            "
           >
-            <table class="w-full text-left table-auto" id="ratesTable">
-              <thead
-                class="bg-gradient-to-r from-gray-600/20 via-slate-600/20 to-gray-600/20 text-slate-200 border-b border-slate-400/30"
-              >
-                <tr>
-                  <th
-                    class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
-                  >
-                    Currency
-                  </th>
-                  <th
-                    class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
-                  >
-                    Buy
-                  </th>
-                  <th
-                    class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
-                  >
-                    Sell
-                  </th>
-                  <th
-                    class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
-                  >
-                    Notable Rate
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                id="ratesBody"
-                class="divide-y divide-slate-700/50 text-2xl lg:text-3xl"
-              ></tbody>
-            </table>
+            Apegres®
+          </span>
+        </footer>
+      </div>
+
+      <!-- Individual Table Display -->
+      <div id="table-display" style="display: none;">
+        <div
+          class="absolute inset-0 bg-black from-slate-800/20 via-slate-900/10 to-transparent"
+        />
+
+        <div
+          id="branchLabel"
+          class="fixed top-4 right-4 text-2xl text-white font-bold text-center bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500 bg-clip-text text-transparent animate-pulse drop-shadow-2xl"
+        >
+          Loading…
+        </div>
+
+        <img
+          src="logo.png"
+          class="fixed w-45 h-40 top-20 left-4 animate-pulse drop-shadow-2xl"
+        />
+
+        <div
+          class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col items-center justify-start mt-[25rem] p-12 w-full h-full relative"
+        >
+          <!-- Light background glow -->
+          <div
+            class="absolute top-1/4 left-1/2 w-80 h-80 transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-tr from-indigo-500/10 to-purple-500/10 blur-3xl pointer-events-none"
+          ></div>
+
+          <h1
+            class="text-7xl lg:text-8xl font-bold mb-14 mt-16 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500 bg-clip-text text-transparent animate-pulse drop-shadow-2xl relative z-10 text-center"
+          >
+            Exmony
+          </h1>
+
+          <div class="w-full max-w-7xl relative z-10">
+            <div
+              class="bg-gradient-to-r from-slate-800/50 via-slate-700/50 to-slate-800/50 backdrop-blur-xl border border-slate-500/30 rounded-3xl overflow-hidden shadow-2xl shadow-black/20"
+            >
+              <table class="w-full text-left table-auto" id="ratesTable">
+                <thead
+                  class="bg-gradient-to-r from-gray-600/20 via-slate-600/20 to-gray-600/20 text-slate-200 border-b border-slate-400/30"
+                >
+                  <tr>
+                    <th
+                      class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
+                    >
+                      Currency
+                    </th>
+                    <th
+                      class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
+                    >
+                      Buy
+                    </th>
+                    <th
+                      class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
+                    >
+                      Sell
+                    </th>
+                    <th
+                      class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
+                    >
+                      Notable Rate
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="ratesBody"
+                  class="divide-y divide-slate-700/50 text-2xl lg:text-3xl"
+                ></tbody>
+              </table>
+            </div>
+
+            <!-- New Content Section Below Table -->
+            <div class="mt-12 text-center relative z-10">
+              <!-- Main Slogan -->
+              <div class="mb-8">
+                <h2
+                  class="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500 bg-clip-text text-transparent"
+                >
+                  "Your Gateway to Global Currency"
+                </h2>
+                <p class="text-xl lg:text-2xl text-slate-300 font-light">
+                  Real-time rates • Trusted service • Seamless exchange
+                </p>
+              </div>
+
+              <!-- Key Features -->
+              <div class="grid grid-cols-3 gap-8 mt-10">
+                <div
+                  class="bg-gradient-to-br from-slate-800/40 via-slate-700/40 to-slate-800/40 backdrop-blur-sm border border-slate-600/30 rounded-2xl p-6"
+                >
+                  <div class="text-3xl mb-3">⚡</div>
+                  <h3 class="text-lg font-semibold text-slate-200 mb-2">
+                    Live Updates
+                  </h3>
+                  <p class="text-sm text-slate-400">
+                    Real-time currency rates updated instantly
+                  </p>
+                </div>
+
+                <div
+                  class="bg-gradient-to-br from-slate-800/40 via-slate-700/40 to-slate-800/40 backdrop-blur-sm border border-slate-600/30 rounded-2xl p-6"
+                >
+                  <div class="text-3xl mb-3">🔒</div>
+                  <h3 class="text-lg font-semibold text-slate-200 mb-2">
+                    Secure Trading
+                  </h3>
+                  <p class="text-sm text-slate-400">
+                    Safe and reliable currency exchange
+                  </p>
+                </div>
+
+                <div
+                  class="bg-gradient-to-br from-slate-800/40 via-slate-700/40 to-slate-800/40 backdrop-blur-sm border border-slate-600/30 rounded-2xl p-6"
+                >
+                  <div class="text-3xl mb-3">🌍</div>
+                  <h3 class="text-lg font-semibold text-slate-200 mb-2">
+                    Global Reach
+                  </h3>
+                  <p class="text-sm text-slate-400">
+                    Multiple currencies from around the world
+                  </p>
+                </div>
+              </div>
+
+            <!-- Decorative elements -->
+            <div
+              class="absolute -top-6 -left-8 w-40 h-40 bg-gradient-to-r from-gray-600 to-slate-700 rounded-full blur-xl opacity-20 animate-pulse"
+            ></div>
+            <div
+              class="absolute -bottom-8 -right-8 w-48 h-48 bg-gradient-to-r from-gray-500 to-slate-600 rounded-full blur-xl opacity-20 animate-pulse delay-1000"
+            ></div>
           </div>
-
-          <!-- New Content Section Below Table -->
-          <div class="mt-12 text-center relative z-10">
-            <!-- Main Slogan -->
-            <div class="mb-8">
-              <h2
-                class="text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-gray-300 via-gray-400 to-gray-500 bg-clip-text text-transparent"
-              >
-                "Your Gateway to Global Currency"
-              </h2>
-              <p class="text-xl lg:text-2xl text-slate-300 font-light">
-                Real-time rates • Trusted service • Seamless exchange
-              </p>
-            </div>
-
-            <!-- Key Features -->
-            <div class="grid grid-cols-3 gap-8 mt-10">
-              <div
-                class="bg-gradient-to-br from-slate-800/40 via-slate-700/40 to-slate-800/40 backdrop-blur-sm border border-slate-600/30 rounded-2xl p-6"
-              >
-                <div class="text-3xl mb-3">⚡</div>
-                <h3 class="text-lg font-semibold text-slate-200 mb-2">
-                  Live Updates
-                </h3>
-                <p class="text-sm text-slate-400">
-                  Real-time currency rates updated instantly
-                </p>
-              </div>
-
-              <div
-                class="bg-gradient-to-br from-slate-800/40 via-slate-700/40 to-slate-800/40 backdrop-blur-sm border border-slate-600/30 rounded-2xl p-6"
-              >
-                <div class="text-3xl mb-3">🔒</div>
-                <h3 class="text-lg font-semibold text-slate-200 mb-2">
-                  Secure Trading
-                </h3>
-                <p class="text-sm text-slate-400">
-                  Safe and reliable currency exchange
-                </p>
-              </div>
-
-              <div
-                class="bg-gradient-to-br from-slate-800/40 via-slate-700/40 to-slate-800/40 backdrop-blur-sm border border-slate-600/30 rounded-2xl p-6"
-              >
-                <div class="text-3xl mb-3">🌍</div>
-                <h3 class="text-lg font-semibold text-slate-200 mb-2">
-                  Global Reach
-                </h3>
-                <p class="text-sm text-slate-400">
-                  Multiple currencies from around the world
-                </p>
-              </div>
-            </div>
-
-          
-
-          <div
-            class="absolute -top-6 -left-8 w-40 h-40 bg-gradient-to-r from-gray-600 to-slate-700 rounded-full blur-xl opacity-20 animate-pulse"
-          ></div>
-          <div
-            class="absolute -bottom-8 -right-8 w-48 h-48 bg-gradient-to-r from-gray-500 to-slate-600 rounded-full blur-xl opacity-20 animate-pulse delay-1000"
-          ></div>
         </div>
       </div>
 
@@ -313,15 +362,74 @@
           return urlParams.get('table');
         }
 
-        // Get table ID or use default
+        // Get table ID from URL
         const tableId = getTableIdFromUrl();
         
         if (!tableId) {
-          // Show error if no table ID provided
-          document.getElementById('error-message').style.display = 'block';
-          document.getElementById('mainContent').style.display = 'none';
+          // Show table selection page
+          showTableSelection();
         } else {
-          // Dynamic API URL based on table ID
+          // Show individual table display
+          showTableDisplay(tableId);
+        }
+
+        function showTableSelection() {
+          document.getElementById('table-selection').style.display = 'block';
+          document.getElementById('table-display').style.display = 'none';
+          loadAvailableTables();
+        }
+
+        function showTableDisplay(tableId) {
+          document.getElementById('table-selection').style.display = 'none';
+          document.getElementById('table-display').style.display = 'block';
+          loadTableData(tableId);
+        }
+
+        function loadAvailableTables() {
+          fetch('https://api.exmony.ge/rate-tables')
+            .then((res) => {
+              if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+              }
+              return res.json();
+            })
+            .then((tables) => {
+              document.getElementById('loading-tables').style.display = 'none';
+              
+              if (!tables || tables.length === 0) {
+                document.getElementById('no-tables').style.display = 'block';
+                return;
+              }
+
+              const tablesGrid = document.getElementById('tables-grid');
+              tablesGrid.style.display = 'grid';
+
+              tables.forEach((table) => {
+                const tableCard = document.createElement('div');
+                tableCard.className = 'table-card';
+                tableCard.onclick = () => {
+                  window.location.href = `?table=${table._id}`;
+                };
+
+                tableCard.innerHTML = `
+                  <div class="text-center">
+                    <h3 class="text-2xl font-bold text-slate-200 mb-2">${table.name}</h3>
+                    <p class="text-slate-400 mb-4">${table.currencies?.length || 0} currencies available</p>
+                    <div class="text-sm text-slate-500">Click to view live rates</div>
+                  </div>
+                `;
+
+                tablesGrid.appendChild(tableCard);
+              });
+            })
+            .catch((err) => {
+              console.error('Failed to load tables:', err);
+              document.getElementById('loading-tables').style.display = 'none';
+              document.getElementById('no-tables').style.display = 'block';
+            });
+        }
+
+        function loadTableData(tableId) {
           const API_URL = `https://api.exmony.ge/rate-tables/${tableId}`;
           const WS_URL = "https://api.exmony.ge";
           let currentTableId = null;
@@ -405,9 +513,8 @@
             })
             .catch((err) => {
               console.error("Initial fetch failed:", err);
-              // Show error message
-              document.getElementById('error-message').style.display = 'block';
-              document.getElementById('mainContent').style.display = 'none';
+              // Redirect back to table selection if table not found
+              window.location.href = '/';
             });
 
           function initSocket(tableId) {
