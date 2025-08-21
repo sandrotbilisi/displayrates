@@ -382,11 +382,65 @@
           if (label) label.textContent = `${clamped}%`;
           if (range) range.value = String(clamped);
           
-          // Apply zoom to the main content
-          const mainContent = document.getElementById('mainContent');
-          if (mainContent) {
-            mainContent.style.transform = `rotate(90deg) scale(${clamped / 100})`;
+          // Apply scaling to font sizes and element sizes
+          const scale = clamped / 100;
+          const root = document.documentElement;
+          
+          // Scale font sizes
+          root.style.setProperty('--scale-factor', String(scale));
+          
+          // Apply scaling to specific elements
+          const elements = {
+            'h1': { fontSize: `${Math.round(7 * scale)}rem` },
+            'h2': { fontSize: `${Math.round(4 * scale)}rem` },
+            'p': { fontSize: `${Math.round(1.5 * scale)}rem` },
+            'th': { fontSize: `${Math.round(1.8 * scale)}rem`, padding: `${Math.round(0.5 * scale)}rem` },
+            'td': { fontSize: `${Math.round(2.2 * scale)}rem`, padding: `${Math.round(0.5 * scale)}rem` },
+            '.currency-code': { fontSize: `${Math.round(2.2 * scale)}rem` },
+            '.branch-label': { fontSize: `${Math.round(2 * scale)}rem` },
+            '.feature-title': { fontSize: `${Math.round(1.2 * scale)}rem` },
+            '.feature-text': { fontSize: `${Math.round(0.9 * scale)}rem` }
+          };
+          
+          // Apply styles
+          Object.entries(elements).forEach(([selector, styles]) => {
+            const els = document.querySelectorAll(selector);
+            els.forEach(el => {
+              Object.entries(styles).forEach(([prop, value]) => {
+                el.style[prop] = value;
+              });
+            });
+          });
+          
+          // Scale table cell content
+          const tableCells = document.querySelectorAll('td, th');
+          tableCells.forEach(cell => {
+            cell.style.fontSize = `${Math.round(2.2 * scale)}rem`;
+            cell.style.padding = `${Math.round(0.5 * scale)}rem`;
+          });
+          
+          // Scale currency code spans
+          const currencySpans = document.querySelectorAll('td span');
+          currencySpans.forEach(span => {
+            span.style.fontSize = `${Math.round(2.2 * scale)}rem`;
+          });
+          
+          // Scale branch label
+          const branchLabel = document.getElementById('branchLabel');
+          if (branchLabel) {
+            branchLabel.style.fontSize = `${Math.round(2 * scale)}rem`;
           }
+          
+          // Scale feature cards
+          const featureTitles = document.querySelectorAll('.feature-title');
+          featureTitles.forEach(title => {
+            title.style.fontSize = `${Math.round(1.2 * scale)}rem`;
+          });
+          
+          const featureTexts = document.querySelectorAll('.feature-text');
+          featureTexts.forEach(text => {
+            text.style.fontSize = `${Math.round(0.9 * scale)}rem`;
+          });
         }
 
         function initZoomControl() {
@@ -414,6 +468,7 @@
             <input id="zoom-range" type="range" min="50" max="200" step="5" value="${zoomFactor}" style="width:180px">
             <button id="zoom-in" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">+</button>
             <button id="zoom-reset" title="Reset" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">100%</button>
+            <button id="zoom-toggle" title="Hide/Show" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">×</button>
           `;
 
           document.body.appendChild(ctrl);
@@ -425,6 +480,31 @@
             const target = e.target;
             const val = parseFloat(target && target.value ? target.value : '');
             if (!Number.isNaN(val)) setZoomFactor(val);
+          });
+          
+          // Toggle hide/show functionality
+          let isZoomControlHidden = false;
+          document.getElementById('zoom-toggle')?.addEventListener('click', () => {
+            const controls = document.querySelectorAll('#zoom-out, #zoom-value, #zoom-range, #zoom-in, #zoom-reset');
+            const toggleBtn = document.getElementById('zoom-toggle');
+            
+            if (isZoomControlHidden) {
+              // Show controls
+              controls.forEach(control => {
+                control.style.display = 'block';
+              });
+              toggleBtn.textContent = '×';
+              toggleBtn.title = 'Hide';
+              isZoomControlHidden = false;
+            } else {
+              // Hide controls
+              controls.forEach(control => {
+                control.style.display = 'none';
+              });
+              toggleBtn.textContent = '⚙';
+              toggleBtn.title = 'Show';
+              isZoomControlHidden = true;
+            }
           });
 
           // Keyboard shortcuts: +/- to adjust zoom
@@ -518,62 +598,65 @@
             return td;
           }
 
-          function render(table) {
-            document.getElementById("branchLabel").textContent =
-              (table.name || "Unknown") + " Branch";
-            const tbody = document.getElementById("ratesBody");
-            tbody.innerHTML = "";
+                     function render(table) {
+             document.getElementById("branchLabel").textContent =
+               (table.name || "Unknown") + " Branch";
+             const tbody = document.getElementById("ratesBody");
+             tbody.innerHTML = "";
 
-            (table.currencies || []).forEach((cur) => {
-              const tr = document.createElement("tr");
-              tr.setAttribute("data-code", cur.code);
-              tr.className =
-                "hover:bg-gradient-to-r hover:from-slate-800/20 hover:via-slate-700/20 hover:to-slate-800/20 transition-all duration-300 group";
+             (table.currencies || []).forEach((cur) => {
+               const tr = document.createElement("tr");
+               tr.setAttribute("data-code", cur.code);
+               tr.className =
+                 "hover:bg-gradient-to-r hover:from-slate-800/20 hover:via-slate-700/20 hover:to-slate-800/20 transition-all duration-300 group";
 
-              const td0 = document.createElement("td");
-              td0.className =
-                "flex items-center text-center justify-center gap-4 p-2";
+               const td0 = document.createElement("td");
+               td0.className =
+                 "flex items-center text-center justify-center gap-4 p-2";
 
-              if (cur.image) {
-                const imgWrap = document.createElement("div");
-                imgWrap.className = "relative";
-                const img = new Image();
-                img.src = cur.image;
-                img.alt = cur.label;
-                img.width = 64;
-                img.height = 64;
-                img.className = "object-cover transition-all duration-300";
-                imgWrap.appendChild(img);
+               if (cur.image) {
+                 const imgWrap = document.createElement("div");
+                 imgWrap.className = "relative";
+                 const img = new Image();
+                 img.src = cur.image;
+                 img.alt = cur.label;
+                 img.width = 64;
+                 img.height = 64;
+                 img.className = "object-cover transition-all duration-300";
+                 imgWrap.appendChild(img);
 
-                const overlay = document.createElement("div");
-                overlay.className =
-                  "absolute inset-0 rounded-lg bg-gradient-to-tr from-slate-300/20 to-slate-400/20 group-hover:from-slate-300/40 group-hover:to-slate-400/40 transition-all duration-300";
-                imgWrap.appendChild(overlay);
+                 const overlay = document.createElement("div");
+                 overlay.className =
+                   "absolute inset-0 rounded-lg bg-gradient-to-tr from-slate-300/20 to-slate-400/20 group-hover:from-slate-300/40 group-hover:to-slate-400/40 transition-all duration-300";
+                 imgWrap.appendChild(overlay);
 
-                td0.appendChild(imgWrap);
-              }
+                 td0.appendChild(imgWrap);
+               }
 
-              const span = document.createElement("span");
-              span.className =
-                "font-mono font-bold text-2xl lg:text-3xl text-slate-300 group-hover:text-slate-200 transition-colors duration-300";
+               const span = document.createElement("span");
+               span.className =
+                 "font-mono font-bold text-2xl lg:text-3xl text-slate-300 group-hover:text-slate-200 transition-colors duration-300";
 
-              span.textContent = cur.code;
-              td0.appendChild(span);
-              tr.appendChild(td0);
+               span.textContent = cur.code;
+               td0.appendChild(span);
+               tr.appendChild(td0);
 
-              tr.appendChild(
-                createCell(cur.buyRate, "buy text-green-400 font-bold")
-              );
-              tr.appendChild(
-                createCell(cur.sellRate, "sell text-yellow-400 font-bold")
-              );
-              tr.appendChild(
-                createCell(cur.notableRate, "notable text-blue-400 font-bold")
-              );
+               tr.appendChild(
+                 createCell(cur.buyRate, "buy text-green-400 font-bold")
+               );
+               tr.appendChild(
+                 createCell(cur.sellRate, "sell text-yellow-400 font-bold")
+               );
+               tr.appendChild(
+                 createCell(cur.notableRate, "notable text-blue-400 font-bold")
+               );
 
-              tbody.appendChild(tr);
-            });
-          }
+               tbody.appendChild(tr);
+             });
+             
+             // Apply current scaling to newly rendered content
+             setZoomFactor(zoomFactor);
+           }
 
           // Apply initial zoom
           setZoomFactor(zoomFactor);
