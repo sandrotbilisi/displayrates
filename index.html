@@ -364,32 +364,35 @@
 
         // Read initial scaling factor (URL param `scale` → localStorage → default 100)
         let latestTableData = null;
-        let scalingFactor = (function () {
+        let zoomFactor = (function () {
           const urlParams = new URLSearchParams(window.location.search);
-          const fromUrl = parseFloat(urlParams.get('scale') || '');
+          const fromUrl = parseFloat(urlParams.get('zoom') || '');
           if (!Number.isNaN(fromUrl) && fromUrl > 0) return Math.round(fromUrl);
-          const fromStorage = parseFloat(localStorage.getItem('scalingFactor') || '');
+          const fromStorage = parseFloat(localStorage.getItem('zoomFactor') || '');
           if (!Number.isNaN(fromStorage) && fromStorage > 0) return Math.round(fromStorage);
           return 100;
         })();
 
-        function setScalingFactor(next) {
-          const clamped = Math.max(10, Math.min(300, Math.round(next)));
-          scalingFactor = clamped;
-          localStorage.setItem('scalingFactor', String(clamped));
-          const label = document.getElementById('scale-value');
-          const range = document.getElementById('scale-range');
+        function setZoomFactor(next) {
+          const clamped = Math.max(50, Math.min(200, Math.round(next)));
+          zoomFactor = clamped;
+          localStorage.setItem('zoomFactor', String(clamped));
+          const label = document.getElementById('zoom-value');
+          const range = document.getElementById('zoom-range');
           if (label) label.textContent = `${clamped}%`;
           if (range) range.value = String(clamped);
-          if (typeof window._renderTable === 'function' && latestTableData) {
-            window._renderTable(latestTableData);
+          
+          // Apply zoom to the main content
+          const mainContent = document.getElementById('mainContent');
+          if (mainContent) {
+            mainContent.style.transform = `rotate(90deg) scale(${clamped / 100})`;
           }
         }
 
-        function initScalingControl() {
-          if (document.getElementById('scaling-control')) return; // already added
+        function initZoomControl() {
+          if (document.getElementById('zoom-control')) return; // already added
           const ctrl = document.createElement('div');
-          ctrl.id = 'scaling-control';
+          ctrl.id = 'zoom-control';
           ctrl.style.cssText = [
             'position:fixed',
             'top:20px',
@@ -406,31 +409,31 @@
           ].join(';');
 
           ctrl.innerHTML = `
-            <button id="scale-dec" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">-</button>
-            <span id="scale-value" style="min-width:52px;text-align:center">${scalingFactor}%</span>
-            <input id="scale-range" type="range" min="10" max="300" step="1" value="${scalingFactor}" style="width:180px">
-            <button id="scale-inc" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">+</button>
-            <button id="scale-reset" title="Reset" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">100%</button>
+            <button id="zoom-out" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">-</button>
+            <span id="zoom-value" style="min-width:52px;text-align:center">${zoomFactor}%</span>
+            <input id="zoom-range" type="range" min="50" max="200" step="5" value="${zoomFactor}" style="width:180px">
+            <button id="zoom-in" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">+</button>
+            <button id="zoom-reset" title="Reset" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">100%</button>
           `;
 
           document.body.appendChild(ctrl);
 
-          document.getElementById('scale-dec')?.addEventListener('click', () => setScalingFactor(scalingFactor - 1));
-          document.getElementById('scale-inc')?.addEventListener('click', () => setScalingFactor(scalingFactor + 1));
-          document.getElementById('scale-reset')?.addEventListener('click', () => setScalingFactor(100));
-          document.getElementById('scale-range')?.addEventListener('input', (e) => {
+          document.getElementById('zoom-out')?.addEventListener('click', () => setZoomFactor(zoomFactor - 5));
+          document.getElementById('zoom-in')?.addEventListener('click', () => setZoomFactor(zoomFactor + 5));
+          document.getElementById('zoom-reset')?.addEventListener('click', () => setZoomFactor(100));
+          document.getElementById('zoom-range')?.addEventListener('input', (e) => {
             const target = e.target;
             const val = parseFloat(target && target.value ? target.value : '');
-            if (!Number.isNaN(val)) setScalingFactor(val);
+            if (!Number.isNaN(val)) setZoomFactor(val);
           });
 
-          // Keyboard shortcuts: +/- to adjust scaling
+          // Keyboard shortcuts: +/- to adjust zoom
           window.addEventListener('keydown', (e) => {
-            if (e.key === '+' || e.key === '=') setScalingFactor(scalingFactor + 1);
-            if (e.key === '-') setScalingFactor(scalingFactor - 1);
+            if (e.key === '+' || e.key === '=') setZoomFactor(zoomFactor + 5);
+            if (e.key === '-') setZoomFactor(zoomFactor - 5);
             if ((e.key === '0' || e.key === 'r' || e.key === 'R') && (e.ctrlKey || e.metaKey)) {
               e.preventDefault();
-              setScalingFactor(100);
+              setZoomFactor(100);
             }
           });
         }
@@ -455,7 +458,7 @@
         function showTableDisplay(tableId) {
           document.getElementById('table-selection').style.display = 'none';
           document.getElementById('table-display').style.display = 'block';
-          initScalingControl();
+          initZoomControl();
           loadTableData(tableId);
         }
 
@@ -558,28 +561,22 @@
               td0.appendChild(span);
               tr.appendChild(td0);
 
-              const factor = scalingFactor / 100;
-              const toScaled = (v) => {
-                const num = Number(v);
-                return Number.isFinite(num) ? (num * factor).toFixed(2) : String(v);
-              };
-
               tr.appendChild(
-                createCell(toScaled(cur.buyRate), "buy text-green-400 font-bold")
+                createCell(cur.buyRate, "buy text-green-400 font-bold")
               );
               tr.appendChild(
-                createCell(toScaled(cur.sellRate), "sell text-yellow-400 font-bold")
+                createCell(cur.sellRate, "sell text-yellow-400 font-bold")
               );
               tr.appendChild(
-                createCell(toScaled(cur.notableRate), "notable text-blue-400 font-bold")
+                createCell(cur.notableRate, "notable text-blue-400 font-bold")
               );
 
               tbody.appendChild(tr);
             });
           }
 
-          // expose render for scaling re-renders
-          window._renderTable = render;
+          // Apply initial zoom
+          setZoomFactor(zoomFactor);
 
           fetch(API_URL)
             .then((res) => {
@@ -588,13 +585,13 @@
               }
               return res.json();
             })
-            .then((table) => {
-              if (!table) throw new Error("No data received.");
-              currentTableId = table._id;
-              latestTableData = table;
-              window._renderTable(table);
-              initSocket(currentTableId);
-            })
+                         .then((table) => {
+               if (!table) throw new Error("No data received.");
+               currentTableId = table._id;
+               latestTableData = table;
+               render(table);
+               initSocket(currentTableId);
+             })
             .catch((err) => {
               console.error("Initial fetch failed:", err);
               // Redirect back to table selection if table not found
