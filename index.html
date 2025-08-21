@@ -139,6 +139,20 @@
         font-size: 24px;
         z-index: 10000;
       }
+
+      .error-message {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(220, 38, 38, 0.9);
+        color: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        text-align: center;
+        z-index: 10000;
+        max-width: 80%;
+      }
     </style>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   </head>
@@ -153,6 +167,12 @@
         <button id="video-close" onclick="closeVideo()">✕</button>
       </div>
 
+      <!-- Error Message -->
+      <div id="error-message" class="error-message" style="display: none;">
+        <h2 class="text-2xl font-bold mb-2">Table Not Found</h2>
+        <p>Please check the URL and make sure the table ID is correct.</p>
+        <p class="text-sm mt-2">URL format: ?table=TABLE_ID</p>
+      </div>
 
       <div
         class="absolute inset-0 bg-black from-slate-800/20 via-slate-900/10 to-transparent"
@@ -287,106 +307,129 @@
       </div>
 
       <script>
-        const API_URL = "https://api.exmony.ge/rate-tables?name=kobaladze";
-        const WS_URL = "https://api.exmony.ge";
-        let tableId = null;
-
-        function createCell(txt, extraCls) {
-          const td = document.createElement("td");
-          td.className = "p-2 text-center " + (extraCls || "");
-          td.textContent = txt;
-          return td;
+        // Get table ID from URL parameters
+        function getTableIdFromUrl() {
+          const urlParams = new URLSearchParams(window.location.search);
+          return urlParams.get('table');
         }
 
-        function render(table) {
-          document.getElementById("branchLabel").textContent =
-            (table.name || "Unknown") + " Branch";
-          const tbody = document.getElementById("ratesBody");
-          tbody.innerHTML = "";
+        // Get table ID or use default
+        const tableId = getTableIdFromUrl();
+        
+        if (!tableId) {
+          // Show error if no table ID provided
+          document.getElementById('error-message').style.display = 'block';
+          document.getElementById('mainContent').style.display = 'none';
+        } else {
+          // Dynamic API URL based on table ID
+          const API_URL = `https://api.exmony.ge/rate-tables/${tableId}`;
+          const WS_URL = "https://api.exmony.ge";
+          let currentTableId = null;
 
-          (table.currencies || []).forEach((cur) => {
-            const tr = document.createElement("tr");
-            tr.setAttribute("data-code", cur.code);
-            tr.className =
-              "hover:bg-gradient-to-r hover:from-slate-800/20 hover:via-slate-700/20 hover:to-slate-800/20 transition-all duration-300 group";
+          function createCell(txt, extraCls) {
+            const td = document.createElement("td");
+            td.className = "p-2 text-center " + (extraCls || "");
+            td.textContent = txt;
+            return td;
+          }
 
-            const td0 = document.createElement("td");
-            td0.className =
-              "flex items-center text-center justify-center gap-4 p-2";
+          function render(table) {
+            document.getElementById("branchLabel").textContent =
+              (table.name || "Unknown") + " Branch";
+            const tbody = document.getElementById("ratesBody");
+            tbody.innerHTML = "";
 
-            if (cur.image) {
-              const imgWrap = document.createElement("div");
-              imgWrap.className = "relative";
-              const img = new Image();
-              img.src = cur.image;
-              img.alt = cur.label;
-              img.width = 64;
-              img.height = 64;
-              img.className = "object-cover transition-all duration-300";
-              imgWrap.appendChild(img);
+            (table.currencies || []).forEach((cur) => {
+              const tr = document.createElement("tr");
+              tr.setAttribute("data-code", cur.code);
+              tr.className =
+                "hover:bg-gradient-to-r hover:from-slate-800/20 hover:via-slate-700/20 hover:to-slate-800/20 transition-all duration-300 group";
 
-              const overlay = document.createElement("div");
-              overlay.className =
-                "absolute inset-0 rounded-lg bg-gradient-to-tr from-slate-300/20 to-slate-400/20 group-hover:from-slate-300/40 group-hover:to-slate-400/40 transition-all duration-300";
-              imgWrap.appendChild(overlay);
+              const td0 = document.createElement("td");
+              td0.className =
+                "flex items-center text-center justify-center gap-4 p-2";
 
-              td0.appendChild(imgWrap);
-            }
+              if (cur.image) {
+                const imgWrap = document.createElement("div");
+                imgWrap.className = "relative";
+                const img = new Image();
+                img.src = cur.image;
+                img.alt = cur.label;
+                img.width = 64;
+                img.height = 64;
+                img.className = "object-cover transition-all duration-300";
+                imgWrap.appendChild(img);
 
-            const span = document.createElement("span");
-            span.className =
-              "font-mono font-bold text-2xl lg:text-3xl text-slate-300 group-hover:text-slate-200 transition-colors duration-300";
+                const overlay = document.createElement("div");
+                overlay.className =
+                  "absolute inset-0 rounded-lg bg-gradient-to-tr from-slate-300/20 to-slate-400/20 group-hover:from-slate-300/40 group-hover:to-slate-400/40 transition-all duration-300";
+                imgWrap.appendChild(overlay);
 
-            span.textContent = cur.code;
-            td0.appendChild(span);
-            tr.appendChild(td0);
+                td0.appendChild(imgWrap);
+              }
 
-            tr.appendChild(
-              createCell(cur.buyRate, "buy text-green-400 font-bold")
-            );
-            tr.appendChild(
-              createCell(cur.sellRate, "sell text-yellow-400 font-bold")
-            );
-            tr.appendChild(
-              createCell(cur.notableRate, "notable text-blue-400 font-bold")
-            );
+              const span = document.createElement("span");
+              span.className =
+                "font-mono font-bold text-2xl lg:text-3xl text-slate-300 group-hover:text-slate-200 transition-colors duration-300";
 
-            tbody.appendChild(tr);
-          });
-        }
+              span.textContent = cur.code;
+              td0.appendChild(span);
+              tr.appendChild(td0);
 
-        fetch(API_URL)
-          .then((res) => res.json())
-          .then((data) => {
-            if (!data || !data.length) throw new Error("No data received.");
-            const table = data[0];
-            tableId = table._id;
-            render(table);
-            initSocket(tableId);
-          })
-          .catch((err) => {
-            console.error("Initial fetch failed:", err);
-          });
+              tr.appendChild(
+                createCell(cur.buyRate, "buy text-green-400 font-bold")
+              );
+              tr.appendChild(
+                createCell(cur.sellRate, "sell text-yellow-400 font-bold")
+              );
+              tr.appendChild(
+                createCell(cur.notableRate, "notable text-blue-400 font-bold")
+              );
 
-        function initSocket(tableId) {
-          const socket = io(WS_URL, {
-            transports: ["websocket"],
-            withCredentials: true,
-          });
+              tbody.appendChild(tr);
+            });
+          }
 
-          socket.on("connect", () => {
-            console.log("✅ Socket connected:", socket.id);
-            socket.emit("joinRoom", tableId);
-          });
+          fetch(API_URL)
+            .then((res) => {
+              if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+              }
+              return res.json();
+            })
+            .then((table) => {
+              if (!table) throw new Error("No data received.");
+              currentTableId = table._id;
+              render(table);
+              initSocket(currentTableId);
+            })
+            .catch((err) => {
+              console.error("Initial fetch failed:", err);
+              // Show error message
+              document.getElementById('error-message').style.display = 'block';
+              document.getElementById('mainContent').style.display = 'none';
+            });
 
-          socket.on("table:update", (data) => {
-            console.log("📡 Live update:", data);
-            if (data._id === tableId) render(data);
-          });
+          function initSocket(tableId) {
+            const socket = io(WS_URL, {
+              transports: ["websocket"],
+              withCredentials: true,
+            });
 
-          socket.on("disconnect", () => {
-            console.warn("⚠️ Socket disconnected");
-          });
+            socket.on("connect", () => {
+              console.log("✅ Socket connected:", socket.id);
+              socket.emit("joinRoom", tableId);
+            });
+
+            socket.on("table:update", (data) => {
+              console.log("📡 Live update:", data);
+              if (data._id === tableId) render(data);
+            });
+
+            socket.on("disconnect", () => {
+              console.warn("⚠️ Socket disconnected");
+            });
+          }
         }
 
         // Fullscreen functionality
