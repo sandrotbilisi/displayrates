@@ -277,11 +277,12 @@
                     >
                       Sell
                     </th>
-                    <th
-                      class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
-                    >
-                      Notable Rate
-                    </th>
+                                       <th
+                     class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
+                     style="line-height: 1.2;"
+                   >
+                     Notable<br>Rate
+                   </th>
                   </tr>
                 </thead>
                 <tbody
@@ -469,6 +470,7 @@
             <button id="zoom-in" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">+</button>
             <button id="zoom-reset" title="Reset" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">100%</button>
             <button id="zoom-toggle" title="Hide/Show" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">×</button>
+            <button id="footer-toggle" title="Hide/Show Footer" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">©</button>
           `;
 
           document.body.appendChild(ctrl);
@@ -504,6 +506,27 @@
               toggleBtn.textContent = '⚙';
               toggleBtn.title = 'Show';
               isZoomControlHidden = true;
+            }
+          });
+
+          // Footer toggle functionality
+          let isFooterHidden = false;
+          document.getElementById('footer-toggle')?.addEventListener('click', () => {
+            const footer = document.getElementById('apegres-footer');
+            const toggleBtn = document.getElementById('footer-toggle');
+            
+            if (isFooterHidden) {
+              // Show footer
+              footer.style.display = 'block';
+              toggleBtn.textContent = '©';
+              toggleBtn.title = 'Hide Footer';
+              isFooterHidden = false;
+            } else {
+              // Hide footer
+              footer.style.display = 'none';
+              toggleBtn.textContent = '©';
+              toggleBtn.title = 'Show Footer';
+              isFooterHidden = true;
             }
           });
 
@@ -782,6 +805,7 @@
       </script>
 
       <footer
+        id="apegres-footer"
         class="w-full text-center p-4 text-slate-400 text-sm absolute bottom-0 z-10 text-2xl"
       >
         Powered By
