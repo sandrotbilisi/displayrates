@@ -234,13 +234,6 @@
           Loading…
         </div>
 
-        <div
-          id="scalingInfo"
-          class="fixed top-16 right-4 text-lg text-white text-center bg-gradient-to-r from-blue-300 via-blue-400 to-blue-500 bg-clip-text text-transparent drop-shadow-2xl"
-        >
-          Session Scaling: 100 | Active Clients: 0
-        </div>
-
         <img
           src="logo.png"
           class="fixed w-45 h-40 top-20 left-4 animate-pulse drop-shadow-2xl"
@@ -440,8 +433,6 @@
           const API_URL = `https://api.exmony.ge/rate-tables/${tableId}`;
           const WS_URL = "https://api.exmony.ge";
           let currentTableId = null;
-          let currentScalingFactor = 100;
-          let sessionStats = null;
 
           function createCell(txt, extraCls) {
             const td = document.createElement("td");
@@ -453,17 +444,6 @@
           function render(table) {
             document.getElementById("branchLabel").textContent =
               (table.name || "Unknown") + " Branch";
-            
-            // Update scaling factor display if available
-            const scalingInfo = document.getElementById("scalingInfo");
-            if (scalingInfo) {
-              if (sessionStats) {
-                scalingInfo.textContent = `Session Scaling: ${sessionStats.sessionScalingFactor} | Active Clients: ${sessionStats.activeConnections}`;
-              } else {
-                scalingInfo.textContent = `Session Scaling: 100 | Active Clients: 0`;
-              }
-            }
-            
             const tbody = document.getElementById("ratesBody");
             tbody.innerHTML = "";
 
@@ -504,20 +484,14 @@
               td0.appendChild(span);
               tr.appendChild(td0);
 
-              // Apply scaling factor to rates
-              const scalingFactor = sessionStats ? sessionStats.sessionScalingFactor : 100;
-              const scaledBuyRate = (cur.buyRate * scalingFactor / 100).toFixed(2);
-              const scaledSellRate = (cur.sellRate * scalingFactor / 100).toFixed(2);
-              const scaledNotableRate = (cur.notableRate * scalingFactor / 100).toFixed(2);
-              
               tr.appendChild(
-                createCell(scaledBuyRate, "buy text-green-400 font-bold")
+                createCell(cur.buyRate, "buy text-green-400 font-bold")
               );
               tr.appendChild(
-                createCell(scaledSellRate, "sell text-yellow-400 font-bold")
+                createCell(cur.sellRate, "sell text-yellow-400 font-bold")
               );
               tr.appendChild(
-                createCell(scaledNotableRate, "notable text-blue-400 font-bold")
+                createCell(cur.notableRate, "notable text-blue-400 font-bold")
               );
 
               tbody.appendChild(tr);
@@ -551,33 +525,12 @@
 
             socket.on("connect", () => {
               console.log("✅ Socket connected:", socket.id);
-              socket.emit("joinRoom", { tableId: tableId, scalingFactor: currentScalingFactor });
+              socket.emit("joinRoom", tableId);
             });
 
             socket.on("table:update", (data) => {
               console.log("📡 Live update:", data);
               if (data._id === tableId) render(data);
-            });
-
-            socket.on("session:stats", (stats) => {
-              console.log("📊 Session stats update:", stats);
-              sessionStats = stats;
-              // Re-render the table with updated scaling
-              fetch(API_URL)
-                .then((res) => res.json())
-                .then((table) => {
-                  if (table) render(table);
-                });
-            });
-
-            socket.on("client:info", (info) => {
-              console.log("👤 Client info:", info);
-              currentScalingFactor = info.scalingFactor;
-            });
-
-            socket.on("scaling:updated", (update) => {
-              console.log("📈 Scaling updated:", update);
-              currentScalingFactor = update.scalingFactor;
             });
 
             socket.on("disconnect", () => {
