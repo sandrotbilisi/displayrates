@@ -455,10 +455,12 @@
               (table.name || "Unknown") + " Branch";
             
             // Update scaling factor display if available
-            if (sessionStats) {
-              const scalingInfo = document.getElementById("scalingInfo");
-              if (scalingInfo) {
+            const scalingInfo = document.getElementById("scalingInfo");
+            if (scalingInfo) {
+              if (sessionStats) {
                 scalingInfo.textContent = `Session Scaling: ${sessionStats.sessionScalingFactor} | Active Clients: ${sessionStats.activeConnections}`;
+              } else {
+                scalingInfo.textContent = `Session Scaling: 100 | Active Clients: 0`;
               }
             }
             
@@ -503,9 +505,10 @@
               tr.appendChild(td0);
 
               // Apply scaling factor to rates
-              const scaledBuyRate = (cur.buyRate * sessionStats.sessionScalingFactor / 100).toFixed(2);
-              const scaledSellRate = (cur.sellRate * sessionStats.sessionScalingFactor / 100).toFixed(2);
-              const scaledNotableRate = (cur.notableRate * sessionStats.sessionScalingFactor / 100).toFixed(2);
+              const scalingFactor = sessionStats ? sessionStats.sessionScalingFactor : 100;
+              const scaledBuyRate = (cur.buyRate * scalingFactor / 100).toFixed(2);
+              const scaledSellRate = (cur.sellRate * scalingFactor / 100).toFixed(2);
+              const scaledNotableRate = (cur.notableRate * scalingFactor / 100).toFixed(2);
               
               tr.appendChild(
                 createCell(scaledBuyRate, "buy text-green-400 font-bold")
