@@ -292,8 +292,8 @@
               </table>
             </div>
 
-            <!-- New Content Section Below Table -->
-            <div class="mt-12 text-center relative z-10">
+                         <!-- New Content Section Below Table -->
+             <div id="content-section" class="mt-12 text-center relative z-10">
               <!-- Main Slogan -->
               <div class="mb-8">
                 <h2
@@ -471,6 +471,7 @@
             <button id="zoom-reset" title="Reset" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">100%</button>
             <button id="zoom-toggle" title="Hide/Show" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">×</button>
             <button id="footer-toggle" title="Hide/Show Footer" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">©</button>
+            <button id="content-toggle" title="Hide/Show Content" style="background:#1f2937;border:1px solid #334155;color:white;border-radius:6px;padding:4px 8px;cursor:pointer">📄</button>
           `;
 
           document.body.appendChild(ctrl);
@@ -527,6 +528,27 @@
               toggleBtn.textContent = '©';
               toggleBtn.title = 'Show Footer';
               isFooterHidden = true;
+            }
+          });
+
+          // Content section toggle functionality
+          let isContentHidden = false;
+          document.getElementById('content-toggle')?.addEventListener('click', () => {
+            const contentSection = document.getElementById('content-section');
+            const toggleBtn = document.getElementById('content-toggle');
+            
+            if (isContentHidden) {
+              // Show content
+              contentSection.style.display = 'block';
+              toggleBtn.textContent = '📄';
+              toggleBtn.title = 'Hide Content';
+              isContentHidden = false;
+            } else {
+              // Hide content
+              contentSection.style.display = 'none';
+              toggleBtn.textContent = '📄';
+              toggleBtn.title = 'Show Content';
+              isContentHidden = true;
             }
           });
 
