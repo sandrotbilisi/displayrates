@@ -643,6 +643,20 @@
             return td;
           }
 
+          function computeNotableRate(buy, sell) {
+            const normalize = (v) => {
+              if (typeof v === 'number') return v;
+              const n = parseFloat(String(v).replace(',', '.'));
+              return Number.isFinite(n) ? n : NaN;
+            };
+            const buyNum = normalize(buy);
+            const sellNum = normalize(sell);
+            if (!Number.isFinite(buyNum) || !Number.isFinite(sellNum)) return '-';
+            if (buyNum === 0) return '-';
+            const diffPct = Math.abs((sellNum - buyNum) / buyNum) * 100;
+            return diffPct > 3 ? `${diffPct.toFixed(2)}%` : '-';
+          }
+
                      function render(table) {
              document.getElementById("branchLabel").textContent =
                (table.name || "Unknown") + " Branch";
@@ -692,9 +706,12 @@
                tr.appendChild(
                  createCell(cur.sellRate, "sell text-yellow-400 font-bold")
                );
-               tr.appendChild(
-                 createCell(cur.notableRate, "notable text-blue-400 font-bold")
-               );
+              tr.appendChild(
+                createCell(
+                  computeNotableRate(cur.buyRate, cur.sellRate),
+                  "notable text-blue-400 font-bold"
+                )
+              );
 
                tbody.appendChild(tr);
              });
