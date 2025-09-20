@@ -707,10 +707,12 @@
                  createCell(cur.sellRate, "sell text-yellow-400 font-bold")
                );
               tr.appendChild(
-                createCell(
-                  computeNotableRate(cur.buyRate, cur.sellRate),
-                  "notable text-blue-400 font-bold"
-                )
+                createCell("-", "notable text-blue-400 font-bold")
+
+                // createCell(
+                //   computeNotableRate(cur.buyRate, cur.sellRate),
+                //   "notable text-blue-400 font-bold"
+                // )
               );
 
                tbody.appendChild(tr);
