@@ -653,7 +653,7 @@
             const sellNum = normalize(sell);
             if (!Number.isFinite(buyNum) || !Number.isFinite(sellNum)) return '-';
             if (buyNum === 0) return '-';
-            return ((sellNum / buyNum) * 100).toFixed(2);
+            return `${((sellNum / buyNum) * 100 - 100).toFixed(2)}%`;
           }
 
                      function render(table) {
