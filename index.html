@@ -263,21 +263,25 @@
                 >
                   <tr>
                     <th
+                      id="header-currency"
                       class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
                     >
                       Currency
                     </th>
                     <th
+                      id="header-buy"
                       class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
                     >
                       Buy
                     </th>
                     <th
+                      id="header-sell"
                       class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
                     >
                       Sell
                     </th>
                                        <th
+                     id="header-notable"
                      class="p-2 font-bold text-lg lg:text-2xl uppercase text-center"
                      style="line-height: 1.2;"
                    >
@@ -357,6 +361,42 @@
       </div>
 
       <script>
+        // Alternate table header language between English and Georgian every 5 seconds
+        const headerTranslations = {
+          en: {
+            currency: 'Currency',
+            buy: 'Buy',
+            sell: 'Sell',
+            notable: 'Notable<br>Rate',
+          },
+          ka: {
+            currency: 'ვალუტა',
+            buy: 'ყიდვა',
+            sell: 'გაყიდვა',
+            notable: 'საყურადღებო<br>კურსი',
+          },
+        };
+        let headerLang = 'en';
+
+        function applyHeaderLanguage() {
+          const t = headerTranslations[headerLang];
+          const headers = {
+            'header-currency': t.currency,
+            'header-buy': t.buy,
+            'header-sell': t.sell,
+            'header-notable': t.notable,
+          };
+          Object.entries(headers).forEach(([id, html]) => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = html;
+          });
+        }
+
+        setInterval(() => {
+          headerLang = headerLang === 'en' ? 'ka' : 'en';
+          applyHeaderLanguage();
+        }, 5000);
+
         // Get table ID from URL parameters
         function getTableIdFromUrl() {
           const urlParams = new URLSearchParams(window.location.search);
