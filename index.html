@@ -653,8 +653,7 @@
             const sellNum = normalize(sell);
             if (!Number.isFinite(buyNum) || !Number.isFinite(sellNum)) return '-';
             if (buyNum === 0) return '-';
-            const diffPct = Math.abs((sellNum - buyNum) / buyNum) * 100;
-            return diffPct > 3 ? `${diffPct.toFixed(2)}%` : '-';
+            return ((sellNum / buyNum) * 100).toFixed(2);
           }
 
                      function render(table) {
@@ -707,12 +706,10 @@
                  createCell(cur.sellRate, "sell text-yellow-400 font-bold")
                );
               tr.appendChild(
-                createCell("-", "notable text-blue-400 font-bold")
-
-                // createCell(
-                //   computeNotableRate(cur.buyRate, cur.sellRate),
-                //   "notable text-blue-400 font-bold"
-                // )
+                createCell(
+                  computeNotableRate(cur.buyRate, cur.sellRate),
+                  "notable text-blue-400 font-bold"
+                )
               );
 
                tbody.appendChild(tr);
